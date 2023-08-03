@@ -13,7 +13,8 @@ def add_data(df: pd.DataFrame, data_list: list) -> pd.DataFrame:
         The updated DataFrame.
     """
 
-    return df.append(data_list, ignore_index=True)
+    return pd.concat([df, pd.DataFrame(data_list)], ignore_index=True)
+
 
 def get_containers_as_text(df: pd.DataFrame) -> str:
     """
@@ -30,7 +31,8 @@ def get_containers_as_text(df: pd.DataFrame) -> str:
     all_parent_ids = set(df['parent_id'].dropna())
     container_ids = all_ids.intersection(all_parent_ids)
     container_df = df[df['id'].isin(container_ids)]
-    container_text = container_df[['id', 'name']].to_csv(index=False)
+    # container_text = container_df[['id', 'name']].to_csv(index=False)
+    container_text = container_df.to_csv(index=False)
     return container_text
 
 def get_item_path(df: pd.DataFrame, name: str) -> str:
@@ -108,3 +110,18 @@ def path_query(query: str, df: pd.DataFrame) -> list:
     candidate_list = closest_word(query, df.name.to_list())
     path_list = [get_item_path(df, c) for c in candidate_list]
     return path_list
+
+def print_tree(df, node_id=None, prefix="", is_last=False):
+    if node_id is None:
+        node = df[df['parent_id'].isnull()].iloc[0]
+    else:
+        node = df[df['id'] == node_id].iloc[0]
+
+    # if node['name'] != 'Root':
+    prefix_component = "└── " if is_last else "├── "
+    print(prefix + prefix_component + node['name'])
+
+    children = df[df['parent_id'] == node['id']]
+    prefix_for_children = prefix + ("    " if is_last else "│   ")
+    for i, (_, child) in enumerate(children.iterrows()):
+        print_tree(df, child['id'], prefix_for_children, i == len(children) - 1)

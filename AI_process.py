@@ -18,19 +18,22 @@ def better_human_input(human_input, model='gpt-4'):
     prompt=f"""
 你将按照物品容纳的顺序整理我的语音输入记录。
 例如
-铅笔放在铅笔盒里，铅笔盒放在书包里，书包放在桌子上。
+铅笔放在铅笔盒里，铅笔盒放在书包里，书包放在桌子上，桌子有抽屉，抽屉里还放着书，桌子是书房里的。
 应当整理成：
-桌子里面有书包，书包里面有铅笔盒，铅笔盒里面有铅笔
+书房里有桌子，桌子里有书包，桌子里有抽屉，书包里有铅笔盒，铅笔盒里有铅笔，抽屉里有书。
 
 以下是我的输入记录：
 {human_input}
+
+物品收纳记录如下：
 """
 
     answer=openai.ChatCompletion.create(
         model=model,
         messages=[
-        {"role": "user", 
-        "content": prompt}],
+        {'role':'system',"content":"You are a helpful assistant with IQ=120"},
+        {"role": "user", "content": prompt}
+        ],
         temperature=0,
     )
     better_input=answer.choices[0].message.content
@@ -41,8 +44,13 @@ def structured_input(human_input,
         model2="gpt-3.5-turbo-16k",
         current_id=10, 
         known_containers="",
+        debug=False
         ):
     better_input=better_human_input(human_input, model=model1)
+
+    if debug:
+        print(better_input)
+
     prompt=prompt=f"""
 你是一位专业的仓库保管员，负责记录物品的存放位置。我将提供物品存放记录，你的任务是：
 
@@ -84,4 +92,3 @@ id,parent_id,name
     )
     output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
     return output['items']
-
