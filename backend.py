@@ -1,6 +1,7 @@
 from AI_process import (
     structured_input,
-    query_item,)
+    query_item,
+    better_query,)
 from data_process import (
     get_containers_as_text,
     add_data,
@@ -18,6 +19,7 @@ def add_item_from_human_input(df, human_input,debug=False):
     return new_df 
 
 def query_item_from_human_query(df, human_query):
-    ref_path=",".join(path_query(human_query, df))
+    better_human_query=better_query(human_query)
+    ref_path=",".join(path_query(better_human_query, df))
     answer=query_item(human_query, ref_path=ref_path)
     return answer

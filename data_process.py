@@ -58,7 +58,7 @@ def get_item_path(df: pd.DataFrame, name: str) -> str:
                 break
             item = parent_items.iloc[0]
             path.insert(0, item['name'])
-        return ' -> '.join(path)
+        return '>'.join(path)
 
 def closest_word(query: str, words: list, topK: int = 3) -> list:
     """
@@ -95,7 +95,7 @@ def gzip_distance(x1: str, x2: str) -> float:
     ncd = (Cx1x2 - min(Cx1, Cx2)) / max(Cx1, Cx2)
     return ncd
 
-def path_query(query: str, df: pd.DataFrame) -> list:
+def path_query(query: str, df: pd.DataFrame,topK: int = 3) -> list:
     """
     Get the paths of the items matching the query.
 
@@ -107,7 +107,7 @@ def path_query(query: str, df: pd.DataFrame) -> list:
         The list of paths of the items matching the query.
     """
 
-    candidate_list = closest_word(query, df.name.to_list())
+    candidate_list = closest_word(query, df.name.to_list(),topK=topK)
     path_list = [get_item_path(df, c) for c in candidate_list]
     return path_list
 
@@ -118,10 +118,10 @@ def print_tree(df, node_id=None, prefix="", is_last=False):
         node = df[df['id'] == node_id].iloc[0]
 
     # if node['name'] != 'Root':
-    prefix_component = "└── " if is_last else "├── "
+    prefix_component = "└─ " if is_last else "├─ "
     print(prefix + prefix_component + node['name'])
 
     children = df[df['parent_id'] == node['id']]
-    prefix_for_children = prefix + ("    " if is_last else "│   ")
+    prefix_for_children = prefix + ("   " if is_last else "│  ")
     for i, (_, child) in enumerate(children.iterrows()):
         print_tree(df, child['id'], prefix_for_children, i == len(children) - 1)

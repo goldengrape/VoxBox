@@ -93,10 +93,30 @@ id,parent_id,name
     output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
     return output['items']
 
+def better_query(human_query, model='gpt-4'):
+    prompt=f"""
+我在查询物品的存放位置，但我不记得物品的精确名称了，请输出3个最可能的物品查询关键词。
+比如：
+泳镜，可能会被称为潜水镜、面镜、游泳镜，这几个词可能会混用
+
+以下是我的查询：
+{human_query}
+"""
+
+    answer=openai.ChatCompletion.create(
+        model=model,
+        messages=[
+        {'role':'system',"content":"You are a helpful assistant with IQ=120"},
+        {"role": "user", "content": prompt}
+        ],
+        temperature=0,
+    )
+    return answer.choices[0].message.content
+
 def query_item(
         human_query,
         ref_path="", 
-        model='gpt-4'):
+        model='gpt-3.5-turbo-16k'):
     prompt=f"""
 请参考下面的物品收纳记录，回答我的问题：
 {human_query}
