@@ -92,3 +92,25 @@ id,parent_id,name
     )
     output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
     return output['items']
+
+def query_item(
+        human_query,
+        ref_path="", 
+        model='gpt-4'):
+    prompt=f"""
+请参考下面的物品收纳记录，回答我的问题：
+{human_query}
+
+物品收纳记录如下：
+{ref_path}
+"""
+
+    answer=openai.ChatCompletion.create(
+        model=model,
+        messages=[
+        {'role':'system',"content":"You are a helpful assistant with IQ=120"},
+        {"role": "user", "content": prompt}
+        ],
+        temperature=0,
+    )
+    return answer.choices[0].message.content

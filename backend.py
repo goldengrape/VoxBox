@@ -1,9 +1,12 @@
-from AI_process import structured_input
-import pandas as pd
+from AI_process import (
+    structured_input,
+    query_item,)
 from data_process import (
     get_containers_as_text,
     add_data,
+    path_query,
     print_tree,)
+import pandas as pd
 
 def add_item_from_human_input(df, human_input,debug=False):
     known_containers = get_containers_as_text(df)
@@ -13,3 +16,8 @@ def add_item_from_human_input(df, human_input,debug=False):
         current_id=current_id, known_containers=known_containers, debug=debug)
     new_df=add_data(df, result)
     return new_df 
+
+def query_item_from_human_query(df, human_query):
+    ref_path=",".join(path_query(human_query, df))
+    answer=query_item(human_query, ref_path=ref_path)
+    return answer
