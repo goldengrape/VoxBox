@@ -21,6 +21,11 @@ class Container_moving(BaseModel):
     container_name: str 
     new_parent_name: str
 
+class Human_command(BaseModel):
+    command: str
+
+
+
 def better_human_input(human_input, model='gpt-4'):
     prompt=f"""
 你将按照物品容纳的顺序整理我的语音输入记录。
@@ -183,3 +188,58 @@ def structured_takeout_items(
     )
     output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
     return output["item_names"]
+
+class Command(BaseModel):
+    name: str
+    Human_command: str
+
+class CommandList(BaseModel):
+    commands: List[Command]
+
+def interpret_human_command(human_command, model='gpt-4'):
+    prompt="""
+    请解读用户的指令，用户可以进行4种操作：
+    1. add_item_from_human_input
+    2. query_item_from_human_query
+    3. move_container_by_human_command
+    4. takeout_items_by_human_command
+    比如：
+    用户放入物品A，将容器B移动到容器C，然后取出物品E，又放入物品F, 询问物品G的位置。
+    则应当解析为：
+    [
+        {"name":"add_item_from_human_input"
+            "Human_command": "放入物品A"},
+        {"name":"move_container_by_human_command"
+            "Human_command": "将容器B移动到容器C"},
+        {"name":"takeout_items_by_human_command"
+            "Human_command": "取出物品E"},
+        {"name":"add_item_from_human_input"
+            "Human_command": "放入物品F"},
+        {"name":"query_item_from_human_query"   
+            "Human_command": "询问物品G的位置"}
+    ]
+    用户的指令如下：###"""+human_command+"""
+    ###
+    请解读用户的指令，返回用户的操作列表和参数列表
+    """
+    functions=[
+            {"name":"interpreter",
+            "description": "interpret human command",
+            "parameters":CommandList.schema()
+            },
+        ]
+    function_call={"name":"interpreter"}
+
+
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        functions=functions,
+        function_call=function_call,
+        temperature=0,
+    )
+    output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
+    return output['commands']

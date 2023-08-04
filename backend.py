@@ -4,6 +4,7 @@ from AI_process import (
     better_query,
     structured_container_mover,
     structured_takeout_items,
+    interpret_human_command,
     )
 from data_process import (
     get_containers_as_text,
@@ -55,3 +56,24 @@ def takeout_items_by_human_command(df, human_cmd):
     takeout_items=structured_takeout_items(human_cmd)
     df=takeout_item_list(df,takeout_items)
     return df
+
+def run_human_command(df, human_cmd, debug=False):
+    command_list=interpret_human_command(human_cmd)
+    print(command_list)
+    answer_list=[]
+
+    for command in command_list:
+        name=command['name']
+        human_input=command['Human_command']
+        if debug:
+            print(name, human_input)
+        if name=='query_item_from_human_query':
+            answer=query_item_from_human_query(df,human_input)
+            answer_list.append(answer)
+            if debug:
+                print(answer)
+        else:
+            df=eval(name)(df, human_input)
+            if debug:
+                print_tree(df)
+    return df, answer_list
