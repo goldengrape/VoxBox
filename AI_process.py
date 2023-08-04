@@ -12,6 +12,7 @@ class Item(BaseModel):
     name: str
 
 class ItemList(BaseModel):
+    # GPT_thinking: str
     items: List[Item]
 
 class Item_Name_list(BaseModel):
@@ -54,6 +55,7 @@ def better_human_input(human_input, model='gpt-4'):
 def structured_input(human_input,
         model1='gpt-4',
         model2="gpt-3.5-turbo-16k",
+        # model2="gpt-4",
         current_id=10, 
         known_containers="",
         debug=False
@@ -83,11 +85,18 @@ id,parent_id,name
 
 {known_containers}
 
-请注意，新的物品或容器必须放入已知的容器中，已知的容器无需重复描述。
+请注意，新的物品或容器必须放入已知的容器中。
+已知的容器无需重复描述。
 
 新的记录如下：
+###
 {better_input}
+###
 """
+    if debug:
+        print()
+        print(prompt)
+
     response=openai.ChatCompletion.create(
         model=model2,
         messages=[
@@ -100,7 +109,7 @@ id,parent_id,name
             }
         ],
         function_call={"name":"get_storage_recorder"},
-        temperature=0,
+        temperature=0.2,
     )
     output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
     return output['items']

@@ -36,6 +36,8 @@ def add_item_from_human_input(df, human_input,debug=False):
     result=structured_input(
         human_input=human_input, 
         current_id=current_id, known_containers=known_containers, debug=debug)
+    if debug:
+        print(result)
     new_df=add_data(df, result)
     return new_df 
 
@@ -47,6 +49,8 @@ def query_item_from_human_query(df, human_query):
 
 def move_container_by_human_command(df, human_cmd):
     moving_names=structured_container_mover(human_cmd)
+    if moving_names['new_parent_name'] not in df['name'].values:
+        df=add_item_from_human_input(df, moving_names['new_parent_name'])
     df=move_container(df, 
         moving_names["container_name"], 
         moving_names['new_parent_name'])
