@@ -14,6 +14,9 @@ class Item(BaseModel):
 class ItemList(BaseModel):
     items: List[Item]
 
+class Item_Name_list(BaseModel):
+    item_names: List[str]
+
 class Container_moving(BaseModel):
     container_name: str 
     new_parent_name: str
@@ -99,7 +102,7 @@ id,parent_id,name
 
 def better_query(human_query, model='gpt-4'):
     prompt=f"""
-我在查询物品的存放位置，但我不记得物品的精确名称了，请输出3个最可能的物品查询关键词。
+我在查询物品，但我不记得物品的精确名称了，请输出3个最可能的物品查询关键词。
 比如：
 泳镜，可能会被称为潜水镜、面镜、游泳镜，这几个词可能会混用
 
@@ -159,3 +162,24 @@ def structured_container_mover(
     )
     output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
     return output
+
+def structured_takeout_items(
+        human_input,
+        model='gpt-3.5-turbo'):
+    # 注意，这里缺乏对提取物品的名称检查，可能不存在。
+    response=openai.ChatCompletion.create(
+        model=model,
+        messages=[
+        {"role": "user", 
+        "content": human_input}],
+        functions=[
+            {"name":"get_takeout_items_name",
+            "description": "Get a list of the names of the removed items",
+            "parameters":Item_Name_list.schema()
+            }
+        ],
+        function_call={"name":"get_takeout_items_name"},
+        temperature=0,
+    )
+    output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
+    return output["item_names"]

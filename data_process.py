@@ -1,6 +1,8 @@
 import pandas as pd
 import gzip
 
+
+
 def add_data(df: pd.DataFrame, data_list: list) -> pd.DataFrame:
     """
     Add data to the DataFrame.
@@ -117,17 +119,26 @@ def move_container(df, container_name, new_parent_name):
     df.loc[df['id'] == container_id, 'parent_id'] = new_parent_id
     return df
 
-def print_tree(df, node_id=None, prefix="", is_last=False):
-    if node_id is None:
-        node = df[df['parent_id'].isnull()].iloc[0]
+def takeout_item(df, item_name):
+    # 首先，我们需要确认数据框中存在给定的物品名称
+    if item_name not in df['name'].values:
+        print(f"物品 {item_name} 不存在。")
+        return df
+
+    # 确定给定的物品是一个叶子节点（即没有子节点）
+    item_id = df[df['name'] == item_name]['id'].values[0]
+    if df[df['parent_id'] == item_id].empty:
+        # 这是一个叶子节点，我们可以将其从数据框中删除
+        df = df[df['id'] != item_id]
     else:
-        node = df[df['id'] == node_id].iloc[0]
+        # 这不是一个叶子节点，我们不能删除它
+        print(f"无法取出物品 {item_name}，因为它还有其他物品在内部。")
+    return df
 
-    # if node['name'] != 'Root':
-    prefix_component = "└─ " if is_last else "├─ "
-    print(prefix + prefix_component + node['name'])
 
-    children = df[df['parent_id'] == node['id']]
-    prefix_for_children = prefix + ("   " if is_last else "│  ")
-    for i, (_, child) in enumerate(children.iterrows()):
-        print_tree(df, child['id'], prefix_for_children, i == len(children) - 1)
+def takeout_item_list(df, item_list):
+    for item in item_list:
+        df = takeout_item(df, item)
+    return df
+
+    

@@ -2,14 +2,32 @@ from AI_process import (
     structured_input,
     query_item,
     better_query,
-    structured_container_mover,)
+    structured_container_mover,
+    structured_takeout_items,
+    )
 from data_process import (
     get_containers_as_text,
     add_data,
     path_query,
     move_container,
-    print_tree,)
+    takeout_item_list,
+    )
 import pandas as pd
+
+def print_tree(df, node_id=None, prefix="", is_last=False):
+    if node_id is None:
+        node = df[df['parent_id'].isnull()].iloc[0]
+    else:
+        node = df[df['id'] == node_id].iloc[0]
+
+    # if node['name'] != 'Root':
+    prefix_component = "└─ " if is_last else "├─ "
+    print(prefix + prefix_component + node['name'])
+
+    children = df[df['parent_id'] == node['id']]
+    prefix_for_children = prefix + ("   " if is_last else "│  ")
+    for i, (_, child) in enumerate(children.iterrows()):
+        print_tree(df, child['id'], prefix_for_children, i == len(children) - 1)
 
 def add_item_from_human_input(df, human_input,debug=False):
     known_containers = get_containers_as_text(df)
@@ -31,4 +49,9 @@ def move_container_by_human_command(df, human_cmd):
     df=move_container(df, 
         moving_names["container_name"], 
         moving_names['new_parent_name'])
+    return df
+
+def takeout_items_by_human_command(df, human_cmd):
+    takeout_items=structured_takeout_items(human_cmd)
+    df=takeout_item_list(df,takeout_items)
     return df
