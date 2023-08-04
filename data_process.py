@@ -111,6 +111,12 @@ def path_query(query: str, df: pd.DataFrame,topK: int = 3) -> list:
     path_list = [get_item_path(df, c) for c in candidate_list]
     return path_list
 
+def move_container(df, container_name, new_parent_name):
+    container_id = df[df['name'] == container_name]['id'].values[0]
+    new_parent_id = df[df['name'] == new_parent_name]['id'].values[0]
+    df.loc[df['id'] == container_id, 'parent_id'] = new_parent_id
+    return df
+
 def print_tree(df, node_id=None, prefix="", is_last=False):
     if node_id is None:
         node = df[df['parent_id'].isnull()].iloc[0]

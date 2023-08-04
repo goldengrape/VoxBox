@@ -14,6 +14,10 @@ class Item(BaseModel):
 class ItemList(BaseModel):
     items: List[Item]
 
+class Container_moving(BaseModel):
+    container_name: str 
+    new_parent_name: str
+
 def better_human_input(human_input, model='gpt-4'):
     prompt=f"""
 你将按照物品容纳的顺序整理我的语音输入记录。
@@ -134,3 +138,24 @@ def query_item(
         temperature=0,
     )
     return answer.choices[0].message.content
+
+def structured_container_mover(
+        human_command,
+        model='gpt-3.5-turbo'):
+    
+    response=openai.ChatCompletion.create(
+        model=model,
+        messages=[
+        {"role": "user", 
+        "content": human_command}],
+        functions=[
+            {"name":"move_from_container_to",
+            "description": "Get the name of the container and the destination of the container",
+            "parameters":Container_moving.schema()
+            }
+        ],
+        function_call={"name":"move_from_container_to"},
+        temperature=0,
+    )
+    output = json.loads(response.choices[0]["message"]["function_call"]["arguments"])
+    return output
