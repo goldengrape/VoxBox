@@ -32,10 +32,17 @@ def get_containers_as_text(df: pd.DataFrame) -> str:
     all_ids = set(df['id'])
     all_parent_ids = set(df['parent_id'].dropna())
     container_ids = all_ids.intersection(all_parent_ids)
+
+    # Check for a root node (a node that doesn't have a parent and doesn't have any children)
+    root_ids = all_ids.difference(all_parent_ids)
+    for root_id in root_ids:
+        if root_id not in container_ids:
+            container_ids.add(root_id)
+
     container_df = df[df['id'].isin(container_ids)]
-    # container_text = container_df[['id', 'name']].to_csv(index=False)
     container_text = container_df.to_csv(index=False)
     return container_text
+
 
 def get_item_path(df: pd.DataFrame, name: str) -> str:
     """

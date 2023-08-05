@@ -16,6 +16,9 @@ from data_process import (
 import pandas as pd
 
 def generate_tree_string(df, node_id=None, prefix="", is_last=False):
+    if len(df) <= 1:
+        result = ""
+        return 
     result = ""
     if node_id is None:
         node = df[df['parent_id'].isnull()].iloc[0]
