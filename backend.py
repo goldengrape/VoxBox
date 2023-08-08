@@ -12,12 +12,15 @@ from data_process import (
     path_query,
     move_container,
     takeout_item_list,
+    check_df,
+    find_differences,
     )
 import pandas as pd
 import numpy as np
 
 def generate_tree_string(df, node_id=None, prefix="", is_last=False):
     df = df.copy()
+    # df= check_df(df)
     df.loc[df["parent_id"] == "", "parent_id"] = np.nan
     if len(df) <= 1:
         result = ""
@@ -48,7 +51,8 @@ def add_item_from_human_input(df, human_input,debug=False):
     if debug:
         print(result)
     new_df=add_data(df, result)
-    return new_df 
+    report=find_differences(df, new_df)
+    return check_df(new_df), report
 
 def query_item_from_human_query(df, human_query,debug=False):
     better_human_query=better_query(human_query)
@@ -58,31 +62,34 @@ def query_item_from_human_query(df, human_query,debug=False):
     if debug:
         print(ref_path)
     answer=query_item(human_query, ref_path=ref_path)    
-    return answer
+    return check_df(df), answer
 
 def move_container_by_human_command(df, human_cmd,debug=False):
+    old_df=df.copy()
     moving_names=structured_container_mover(human_cmd)
     if debug:
         print(moving_names)
     if moving_names['new_parent_name'] not in df['name'].values:
         if debug:
             print('new parent not in database')
-        df=add_item_from_human_input(df, moving_names['new_parent_name'])
-    df=move_container(df, 
+        df, _ =add_item_from_human_input(df, moving_names['new_parent_name'])
+    new_df=move_container(df, 
         moving_names["container_name"], 
         moving_names['new_parent_name'])
     if debug:
-        print(generate_tree_string(df))
-    return df
+        print(generate_tree_string(new_df))
+    report=find_differences(old_df, new_df)
+    return check_df(new_df), report
 
 def takeout_items_by_human_command(df, human_cmd,debug=False):
     takeout_items=structured_takeout_items(human_cmd)
     if debug:
         print(takeout_items)
-    df=takeout_item_list(df,takeout_items)
+    new_df=takeout_item_list(df,takeout_items)
     if debug:
-        print(generate_tree_string(df))
-    return df
+        print(generate_tree_string(new_df))
+    report=find_differences(df, new_df)
+    return check_df(new_df), report
 
 def run_human_command(df, human_cmd, debug=False):
     command_list=interpret_human_command(human_cmd)

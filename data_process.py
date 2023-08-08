@@ -149,3 +149,37 @@ def takeout_item_list(df, item_list):
     return df
 
     
+def check_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Check a DataFrame to ensure that each id appears only once and that each id has a unique parent id.
+
+    Args:
+        df: The DataFrame to check.
+
+    Returns:
+        The checked DataFrame.
+    """
+
+    # Check for duplicate ids
+        # Check for duplicate ids
+    if df['id'].duplicated().any():
+        print("Duplicate ids found. Keeping the first occurrence and deleting the rest.")
+        df = df.loc[~df['id'].duplicated(keep='first')]
+
+    return df
+
+def find_differences(df_old: pd.DataFrame, df_new: pd.DataFrame):
+    added_items = df_new[~df_new.isin(df_old)].dropna()
+    removed_items = df_old[~df_old.isin(df_new)].dropna()
+
+    common = pd.merge(df_old, df_new, on=['id', 'name'])
+    moved_items = common[common['parent_id_x'] != common['parent_id_y']]
+    added_string=",".join(added_items['name'].values.tolist())
+    removed_string=",".join(removed_items['name'].values.tolist())
+    moved_string=",".join(moved_items['name'].values.tolist())
+    report=f"""
+    Added items: {added_string}
+    Removed items: {removed_string}
+    Moved items: {moved_string}
+    """
+    return report
