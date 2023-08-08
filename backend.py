@@ -14,25 +14,29 @@ from data_process import (
     takeout_item_list,
     )
 import pandas as pd
+import numpy as np
 
 def generate_tree_string(df, node_id=None, prefix="", is_last=False):
+    df = df.copy()
+    df.loc[df["parent_id"] == "", "parent_id"] = np.nan
     if len(df) <= 1:
         result = ""
-        return 
-    result = ""
+        return result
     if node_id is None:
         node = df[df['parent_id'].isnull()].iloc[0]
     else:
         node = df[df['id'] == node_id].iloc[0]
 
     prefix_component = "└─ " if is_last else "├─ "
-    result += prefix + prefix_component + node['name'] + "\n"
+    result = prefix + prefix_component + node['name'] + "\n"
 
     children = df[df['parent_id'] == node['id']]
     prefix_for_children = prefix + ("   " if is_last else "│  ")
     for i, (_, child) in enumerate(children.iterrows()):
         result += generate_tree_string(df, child['id'], prefix_for_children, i == len(children) - 1)
     return result
+
+
 
 
 def add_item_from_human_input(df, human_input,debug=False):
